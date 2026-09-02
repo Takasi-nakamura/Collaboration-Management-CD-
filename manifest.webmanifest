@@ -1,0 +1,10 @@
+{
+  "name": "Collaboration Management",
+  "short_name": "CM",
+  "description": "PC・スマホ・タブレット間の一時クリップボード連携",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": []
+}
