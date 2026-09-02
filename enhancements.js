@@ -3,6 +3,21 @@
 
   const $ = id => document.getElementById(id);
 
+  function injectStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+      .url-mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#f2f2f2;border-radius:13px;padding:4px;margin:7px 0 12px}
+      .url-mode{border:0;background:transparent;border-radius:10px;padding:10px;color:#666;font-weight:800}
+      .url-mode.active{background:#111;color:#fff}
+      .search-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+      .search-row .primary{width:auto;margin-top:7px}
+      #urlSearchFields .section-note{line-height:1.6;margin:10px 0}
+      #resetDevicesButton{margin-top:12px}
+      @media(max-width:650px){.search-row{grid-template-columns:1fr}.search-row .primary{width:100%}}
+    `;
+    document.head.appendChild(style);
+  }
+
   function setupUrlModes() {
     const direct = $("urlModeDirect");
     const search = $("urlModeSearch");
@@ -85,6 +100,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", () => {
+    injectStyles();
     setupUrlModes();
     setupDeviceReset();
   });
