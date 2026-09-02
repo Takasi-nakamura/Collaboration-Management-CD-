@@ -37,6 +37,35 @@
   </div>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
   <script src="auth-boot.js"></script>
+  <script>
+    // Keep the same logical browser device even when site storage is cleared.
+    (() => {
+      const parts = [
+        navigator.userAgent,
+        navigator.platform,
+        navigator.language,
+        String(screen.width),
+        String(screen.height),
+        String(screen.colorDepth),
+        Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+      ];
+      const source = parts.join("|");
+      const hash = input => {
+        let h = 2166136261;
+        for (let i = 0; i < input.length; i++) {
+          h ^= input.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0).toString(16).padStart(8, "0");
+      };
+      const stableId = `cm-${hash(source)}-${hash(source + "|1")}-${hash(source + "|2")}`;
+      const originalGetItem = Storage.prototype.getItem;
+      Storage.prototype.getItem = function(key) {
+        const value = originalGetItem.call(this, key);
+        return key === "cm_device_id" && value == null ? stableId : value;
+      };
+    })();
+  </script>
   <script type="module" src="app.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
