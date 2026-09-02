@@ -2,20 +2,47 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
+  let deferredInstallPrompt = null;
 
-  function injectStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-      .url-mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#f2f2f2;border-radius:13px;padding:4px;margin:7px 0 12px}
-      .url-mode{border:0;background:transparent;border-radius:10px;padding:10px;color:#666;font-weight:800}
-      .url-mode.active{background:#111;color:#fff}
-      .search-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
-      .search-row .primary{width:auto;margin-top:7px}
-      #urlSearchFields .section-note{line-height:1.6;margin:10px 0}
-      #resetDevicesButton{margin-top:12px}
-      @media(max-width:650px){.search-row{grid-template-columns:1fr}.search-row .primary{width:100%}}
-    `;
-    document.head.appendChild(style);
+  function toast(message) {
+    const el = $("toast");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  function setupInstall() {
+    const button = $("installApp");
+    if (!button) return;
+
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (standalone) return;
+
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      button.classList.remove("hidden");
+    });
+
+    button.addEventListener("click", async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        button.classList.add("hidden");
+        if (choice.outcome === "accepted") toast("ホーム画面に追加しました");
+        return;
+      }
+
+      toast("ブラウザのメニューから「ホーム画面に追加」または「アプリをインストール」を選択してください。");
+    });
+
+    window.addEventListener("appinstalled", () => {
+      button.classList.add("hidden");
+      deferredInstallPrompt = null;
+    });
   }
 
   function setupUrlModes() {
@@ -25,9 +52,10 @@
     const searchFields = $("urlSearchFields");
     const searchInput = $("urlSearchInput");
     const searchButton = $("urlSearchButton");
+    const readButton = $("urlReadButton");
     const selectedUrl = $("urlSelectedResult");
     const editorUrl = $("editorUrl");
-    if (!direct || !search || !directFields || !searchFields || !searchInput || !searchButton || !selectedUrl || !editorUrl) return;
+    if (!direct || !search || !directFields || !searchFields || !searchInput || !searchButton || !readButton || !selectedUrl || !editorUrl) return;
 
     const setMode = mode => {
       const isSearch = mode === "search";
@@ -42,25 +70,47 @@
     direct.addEventListener("click", () => setMode("direct"));
     search.addEventListener("click", () => setMode("search"));
 
-    searchButton.addEventListener("click", () => {
+    const openGoogle = () => {
       const q = searchInput.value.trim();
       if (!q) {
         searchInput.focus();
+        toast("検索ワードを入力してください");
         return;
       }
       const url = `https://www.google.com/search?igu=1&q=${encodeURIComponent(q)}`;
-      window.open(url, "cm-google-browser", "popup,width=1100,height=800,resizable=yes,scrollbars=yes");
-    });
+      const popup = window.open(url, "cm-google-browser", "popup,width=1100,height=800,resizable=yes,scrollbars=yes");
+      if (!popup) toast("ポップアップがブロックされています。ブラウザのポップアップを許可してください。");
+    };
 
-    selectedUrl.addEventListener("input", () => {
-      const value = selectedUrl.value.trim();
-      if (/^https?:\/\//i.test(value)) editorUrl.value = value;
-    });
-
+    searchButton.addEventListener("click", openGoogle);
     searchInput.addEventListener("keydown", e => {
       if (e.key === "Enter") {
         e.preventDefault();
-        searchButton.click();
+        openGoogle();
+      }
+    });
+
+    const useUrl = value => {
+      const url = String(value || "").trim();
+      if (!/^https?:\/\//i.test(url)) return false;
+      selectedUrl.value = url;
+      editorUrl.value = url;
+      toast("URLを取り込みました");
+      return true;
+    };
+
+    selectedUrl.addEventListener("input", () => useUrl(selectedUrl.value));
+
+    readButton.addEventListener("click", async () => {
+      try {
+        if (!navigator.clipboard?.readText) throw new Error("clipboard-unavailable");
+        const value = await navigator.clipboard.readText();
+        if (!useUrl(value)) {
+          toast("クリップボードにURLが見つかりません");
+        }
+      } catch (e) {
+        console.warn("URL clipboard read failed", e);
+        toast("Googleで選んだページのURLをコピーしてから押してください");
       }
     });
 
@@ -69,30 +119,35 @@
 
   function setupDeviceReset() {
     const button = $("resetDevicesButton");
-    if (!button) return;
+    if (!button || button.dataset.bound === "1") return;
+    button.dataset.bound = "1";
+
     button.addEventListener("click", async () => {
-      const user = window.firebase?.auth?.().currentUser;
+      const auth = window.firebase?.auth?.();
+      const user = auth?.currentUser;
       if (!user) {
-        alert("ログインしてください。");
+        toast("ログインしてください");
         return;
       }
-      if (!confirm("登録されている端末をすべてリセットしますか？\n次回ログイン時に、この端末だけを新しく登録します。")) return;
+      if (!window.confirm("登録されている端末をすべて削除しますか？\n削除後、この端末を新しく登録します。")) return;
 
       button.disabled = true;
       const original = button.textContent;
-      button.textContent = "リセット中…";
+      button.textContent = "削除中…";
       try {
-        const db = firebase.firestore();
+        const db = window.firebase.firestore();
         const ref = db.collection("users").doc(user.uid).collection("devices");
         const snap = await ref.get();
-        const batch = db.batch();
-        snap.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert("端末登録をリセットしました。ページを再読み込みします。");
-        location.reload();
+        if (!snap.empty) {
+          const batch = db.batch();
+          snap.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        }
+        toast("端末情報を削除しました");
+        setTimeout(() => location.reload(), 700);
       } catch (e) {
-        console.error(e);
-        alert("端末登録のリセットに失敗しました。FirestoreのSecurity Rulesを確認してください。");
+        console.error("device reset failed", e);
+        toast("端末情報を削除できませんでした");
         button.disabled = false;
         button.textContent = original;
       }
@@ -100,7 +155,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    injectStyles();
+    setupInstall();
     setupUrlModes();
     setupDeviceReset();
   });
