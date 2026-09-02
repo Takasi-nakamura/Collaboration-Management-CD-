@@ -7,8 +7,5 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-window.CM_FIREBASE_CONFIGURED = Boolean(
-  firebaseConfig.apiKey &&
-  firebaseConfig.projectId &&
-  firebaseConfig.appId
-);
+window.CM_FIREBASE_CONFIGURED = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
+window.CM_FIREBASE_CONFIG = firebaseConfig;
