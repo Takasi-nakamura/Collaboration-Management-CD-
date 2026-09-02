@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Collaboration Management - PCとスマホのクリップボードを一時連携">
+  <title>Collaboration Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <section id="authView" class="view">
+      <div class="auth-shell">
+        <div class="brand-mark">CM</div>
+        <p class="eyebrow">COLLABORATION MANAGEMENT</p>
+        <h1>クリップボードを、<br>端末間でつなぐ。</h1>
+        <p class="lead">PC・スマホ・タブレットで、必要なテキストだけを一時的に共有できます。</p>
+        <div class="auth-card">
+          <div class="tabs"><button class="tab active" data-mode="login">ログイン</button><button class="tab" data-mode="signup">アカウント作成</button></div>
+          <form id="authForm">
+            <label>メールアドレス<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+            <label>パスワード<input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="6文字以上"></label>
+            <button class="primary" type="submit" id="authSubmit">ログイン</button>
+          </form>
+          <p id="authError" class="error"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="mainView" class="view hidden">
+      <header class="topbar">
+        <div><div class="brand-small">CM</div><span>Collaboration Management</span></div>
+        <button id="settingsButton" class="icon-button" aria-label="設定" title="設定">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3.1 1.3v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3.1-1.3l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-1.3-3.1h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 1.3-3.1l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3.1-1.3v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3.1 1.3l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 1.3 3.1h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-1.3 3.1Z"/></svg>
+        </button>
+      </header>
+      <main class="content">
+        <div class="page-heading"><div><p class="eyebrow">YOUR CLIPBOARD</p><h2>クリップボード</h2><p>ここにコピーした内容がブロックとして並びます。</p></div><button id="newClipboard" class="primary compact">＋ 新しく追加</button></div>
+        <div id="clipboardList" class="clipboard-list"></div>
+        <div id="emptyState" class="empty-state"><div class="empty-icon">C</div><h3>まだコピーはありません</h3><p>テキストを追加すると、ここからすべての端末で利用できます。</p></div>
+      </main>
+    </section>
+
+    <div id="settingsPanel" class="drawer hidden" aria-hidden="true">
+      <div class="drawer-backdrop" id="settingsBackdrop"></div>
+      <aside class="drawer-panel">
+        <div class="drawer-head"><div><p class="eyebrow">SETTINGS</p><h2>設定</h2></div><button id="closeSettings" class="icon-button">×</button></div>
+        <div class="settings-section"><h3>アカウント</h3><div class="setting-row"><span>メールアドレス</span><strong id="accountEmail">-</strong></div><button id="logoutButton" class="danger-button">ログアウト</button></div>
+        <div class="settings-section"><h3>登録端末</h3><p class="section-note">このアカウントで利用している端末です。</p><div id="deviceList" class="device-list"></div></div>
+        <div class="settings-section"><h3>保存について</h3><p class="section-note">クリップボードは一時保存です。作成から5日を過ぎたデータは削除対象になります。</p></div>
+      </aside>
+    </div>
+
+    <div id="editorModal" class="modal hidden"><div class="modal-backdrop" id="editorBackdrop"></div><div class="modal-card"><div class="modal-head"><h2 id="editorTitle">クリップボードを追加</h2><button id="closeEditor" class="icon-button">×</button></div><textarea id="editorText" rows="9" placeholder="共有したいテキストを入力"></textarea><div class="modal-actions"><button id="cancelEditor" class="secondary">キャンセル</button><button id="saveEditor" class="primary">保存</button></div><p id="editorError" class="error"></p></div></div>
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
