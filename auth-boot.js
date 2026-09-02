@@ -58,6 +58,7 @@
 
     if (form) form.addEventListener("submit", async event => {
       event.preventDefault();
+      event.stopImmediatePropagation();
       const mail = email?.value.trim() || "";
       const pass = password?.value || "";
       if (!mail || !pass) {
