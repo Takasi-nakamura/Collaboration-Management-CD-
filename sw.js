@@ -1,12 +1,15 @@
-const CACHE_NAME = "cm-pwa-v2";
+const CACHE_NAME = "cm-pwa-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./auth-boot.js",
+  "./device-identity.js",
+  "./enhancements.js",
   "./firebase-config.js",
-  "./manifest.webmanifest"
+  "./manifest.webmanifest",
+  "./icon.svg"
 ];
 
 self.addEventListener("install", event => {
@@ -32,7 +35,6 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Static app assets are cache-first so the PWA opens immediately.
   if (request.destination === "script" || request.destination === "style" || request.destination === "manifest" || request.destination === "image") {
     event.respondWith(
       caches.match(request).then(cached => {
@@ -46,7 +48,6 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // HTML stays network-first so deployments update normally, with offline fallback.
   event.respondWith(
     fetch(request)
       .then(response => {
