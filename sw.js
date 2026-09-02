@@ -1,4 +1,4 @@
-const CACHE_NAME = "cm-pwa-v3";
+const CACHE_NAME = "cm-pwa-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -31,22 +31,8 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-
-  if (request.destination === "script" || request.destination === "style" || request.destination === "manifest" || request.destination === "image") {
-    event.respondWith(
-      caches.match(request).then(cached => {
-        const network = fetch(request).then(response => {
-          if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
-          return response;
-        });
-        return cached || network;
-      })
-    );
-    return;
-  }
 
   event.respondWith(
     fetch(request)
