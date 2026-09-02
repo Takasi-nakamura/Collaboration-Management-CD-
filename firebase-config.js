@@ -1,12 +1,10 @@
-const env = import.meta.env || {};
-
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || "",
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: env.VITE_FIREBASE_APP_ID || ""
+  apiKey: "AIzaSyBJSyPxVJDWezDvLhYWJ80TWFv441IeA8A",
+  authDomain: "toolbox-9ae26.firebaseapp.com",
+  projectId: "toolbox-9ae26",
+  storageBucket: "toolbox-9ae26.firebasestorage.app",
+  messagingSenderId: "102342085744",
+  appId: "1:102342085744:web:f92a560d27432e197878b5"
 };
 
 export { firebaseConfig };
