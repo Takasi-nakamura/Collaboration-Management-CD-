@@ -1,6 +1,7 @@
 (() => {
   "use strict";
   const FUNCTION_URL = "https://hxbwsrsphkpvhjngyobu.supabase.co/functions/v1/storage-api";
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
   async function authToken() {
     const auth = window.__cmFirebaseAuth || window.firebase?.auth?.();
@@ -23,6 +24,7 @@
   function ref(path) {
     return {
       async put(file) {
+        if (file.size > MAX_FILE_SIZE) throw new Error("無料プランではファイルは50MB以下にしてください。");
         const form = new FormData();
         form.append("file", file, file.name || "upload");
         await request(`/upload?path=${encodeURIComponent(path)}`, { method: "POST", body: form });
