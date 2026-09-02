@@ -1,4 +1,4 @@
-const CACHE_NAME = "cm-pwa-v1";
+const CACHE_NAME = "cm-pwa-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -32,13 +32,25 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Static app assets are cache-first so the PWA opens immediately.
+  if (request.destination === "script" || request.destination === "style" || request.destination === "manifest" || request.destination === "image") {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        const network = fetch(request).then(response => {
+          if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+          return response;
+        });
+        return cached || network;
+      })
+    );
+    return;
+  }
+
+  // HTML stays network-first so deployments update normally, with offline fallback.
   event.respondWith(
     fetch(request)
       .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
+        if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
         return response;
       })
       .catch(() => caches.match(request).then(cached => cached || caches.match("./index.html")))
